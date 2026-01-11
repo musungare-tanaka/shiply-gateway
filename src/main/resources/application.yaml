@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: shiply
+
+server:
+  port: 8081
