@@ -1,14 +1,14 @@
 spring:
   application:
-    name: shiply
+    name: shiply-gateway
   cloud:
     gateway:
       routes:
         - id: user-management
-          uri: http://localhost:8081
+          uri: ${USER_SERVICE_URL}
           predicates:
             - Path=/auth/**
           filters: []
 
 server:
-  port: 6002
+  port: 8087
