@@ -40,8 +40,8 @@ pipeline {
                     sh """
                     ssh -i $SSH_KEY -o StrictHostKeyChecking=no root@144.91.75.79 << EOF
                     cd /opt/shiply
-                    docker-compose pull gateway
-                    docker-compose up -d gateway
+                    docker compose pull gateway
+                    docker compose up -d gateway
                     EOF
                     """
                 }
