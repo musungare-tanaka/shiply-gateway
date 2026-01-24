@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        IMAGE = "tanakamusungare/shiply-gateway"  // Docker Hub repo for your gateway image
+        IMAGE = "tanaka878/shiply-gateway"  // Docker Hub repo for your gateway image
         VERSION = "${env.BUILD_NUMBER}"           // Unique version tag using Jenkins build number
     }
 
