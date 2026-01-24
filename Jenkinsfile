@@ -35,7 +35,7 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                withCredentials([sshUserPrivateKey(credentialsId: 'server-ssh-key', keyFileVariable: 'SSH_KEY')]) {
+                withCredentials([sshUserPrivateKey(credentialsId: 'server_ssh_keys', keyFileVariable: 'SSH_KEY')]) {
                     // SSH into your server and update the container using docker-compose
                     sh """
                     ssh -i $SSH_KEY -o StrictHostKeyChecking=no root@144.91.75.79 << EOF
