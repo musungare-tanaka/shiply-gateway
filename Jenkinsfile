@@ -14,13 +14,6 @@ pipeline {
             }
         }
 
-        stage('Build') {
-            steps {
-                // Build your Java app with Maven, skip tests for speed (optional)
-                sh 'mvn clean package -DskipTests'
-            }
-        }
-
         stage('Docker Build & Push') {
             steps {
                 withCredentials([string(credentialsId: 'docker-hub-token', variable: 'DOCKER_TOKEN')]) {
