@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         IMAGE = "tanaka878/shiply-gateway"  // Docker Hub repo for your gateway image
-        VERSION = "${env.BUILD_NUMBER}"           // Unique version tag using Jenkins build number
+        VERSION = "${env.BUILD_NUMBER}"      // Unique version tag using Jenkins build number
     }
 
     stages {
@@ -17,7 +17,7 @@ pipeline {
         stage('Docker Build & Push') {
             steps {
                 withCredentials([string(credentialsId: 'docker-hub-token', variable: 'DOCKER_TOKEN')]) {
-                    // Login to Docker Hub securely
+                    // Login to Docker Hub securely on Jenkins agent
                     sh "echo $DOCKER_TOKEN | docker login -u tanaka878 --password-stdin"
 
                     // Build Docker image tagged with the current build number (version)
@@ -35,10 +35,14 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                withCredentials([sshUserPrivateKey(credentialsId: 'server_ssh_keys', keyFileVariable: 'SSH_KEY')]) {
-                    // SSH into your server and update the container using docker-compose
+                withCredentials([
+                    sshUserPrivateKey(credentialsId: 'server_ssh_keys', keyFileVariable: 'SSH_KEY'),
+                    string(credentialsId: 'docker-hub-token', variable: 'DOCKER_TOKEN')
+                ]) {
+                    // SSH into your server, login to Docker Hub, then pull and run containers
                     sh """
                     ssh -i $SSH_KEY -o StrictHostKeyChecking=no root@144.91.75.79 << EOF
+                    echo \$DOCKER_TOKEN | docker login -u tanaka878 --password-stdin
                     cd /opt/shiply
                     docker compose pull gateway
                     docker compose up -d gateway
