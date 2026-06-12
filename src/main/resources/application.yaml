@@ -5,14 +5,17 @@ spring:
   cloud:
     gateway:
       globalcors:
-        corsConfigurations:
+        add-to-simple-url-handler-mapping: true
+        cors-configurations:
           '[/**]':
             allowedOrigins:
+              - "https://shiply-frontend.vercel.app"
               - "http://localhost:5173"
             allowedMethods:
               - GET
               - POST
               - PUT
+              - PATCH
               - DELETE
               - OPTIONS
             allowedHeaders:
