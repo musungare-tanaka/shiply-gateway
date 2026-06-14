@@ -26,6 +26,7 @@ import reactor.netty.http.server.HttpServer;
 class ShiplyApplicationTests {
 
 	private static final String FRONTEND_ORIGIN = "https://shiply-frontend.vercel.app";
+	private static final String LOCAL_FRONTEND_ORIGIN = "http://localhost:3000";
 
 	private static DisposableServer mockUserService;
 
@@ -74,6 +75,24 @@ class ShiplyApplicationTests {
 	}
 
 	@Test
+	void preflightRequestIsAllowedForLocalFrontendOrigin() {
+		EntityExchangeResult<byte[]> result = webTestClient.options()
+				.uri("/auth/login")
+				.header(HttpHeaders.ORIGIN, LOCAL_FRONTEND_ORIGIN)
+				.header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "POST")
+				.header(HttpHeaders.ACCESS_CONTROL_REQUEST_HEADERS, "content-type")
+				.exchange()
+				.expectStatus().is2xxSuccessful()
+				.expectBody()
+				.returnResult();
+
+		assertThat(result.getResponseHeaders().get(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN))
+				.containsExactly(LOCAL_FRONTEND_ORIGIN);
+		assertThat(result.getResponseHeaders().get(HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS))
+				.containsExactly("true");
+	}
+
+	@Test
 	void actualCorsResponseHeadersAreDeduplicated() {
 		EntityExchangeResult<String> result = webTestClient.post()
 				.uri("/auth/register")
@@ -111,16 +130,18 @@ class ShiplyApplicationTests {
 				.host("127.0.0.1")
 				.port(0)
 				.route(routes -> routes
-						.post("/auth/register", (request, response) -> duplicateCorsResponse(response))
-						.post("/auth/login", (request, response) -> duplicateCorsResponse(response)))
+						.post("/auth/register", (request, response) -> duplicateCorsResponse(request.requestHeaders().get(HttpHeaders.ORIGIN), response))
+						.post("/auth/login", (request, response) -> duplicateCorsResponse(request.requestHeaders().get(HttpHeaders.ORIGIN), response)))
 				.bindNow();
 	}
 
-	private static Mono<Void> duplicateCorsResponse(reactor.netty.http.server.HttpServerResponse response) {
+	private static Mono<Void> duplicateCorsResponse(String origin, reactor.netty.http.server.HttpServerResponse response) {
+		String responseOrigin = origin == null || origin.isBlank() ? FRONTEND_ORIGIN : origin;
+
 		return response
 				.status(HttpResponseStatus.OK)
-				.addHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, FRONTEND_ORIGIN)
-				.addHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, FRONTEND_ORIGIN)
+				.addHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, responseOrigin)
+				.addHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, responseOrigin)
 				.addHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS, "true")
 				.addHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS, "true")
 				.addHeader(HttpHeaders.VARY, "Origin")
