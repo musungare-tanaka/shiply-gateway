@@ -34,7 +34,7 @@ spring:
         - id: user-management
           uri: ${USER_SERVICE_URL:http://localhost:8086}
           predicates:
-            - Path=/auth/**,/api/projects/**
+            - Path=/auth/**,/api/projects/**,/api/users/**,/api/admin/**
           filters: []
 
 server:
