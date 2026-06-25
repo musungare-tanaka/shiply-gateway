@@ -121,18 +121,35 @@ class ShiplyApplicationTests {
 				.doesNotHaveDuplicates();
 	}
 
+	@Test
+	void v1ProjectManagementRoutesAreForwardedToUserService() {
+		webTestClient.get()
+				.uri("/api/v1/projects")
+				.header(HttpHeaders.AUTHORIZATION, "Bearer test-token")
+				.exchange()
+				.expectStatus().is2xxSuccessful()
+				.expectHeader().contentType(MediaType.APPLICATION_JSON)
+				.expectBody()
+				.jsonPath("$.route").isEqualTo("v1-projects");
+	}
+
 	private static synchronized void ensureMockUserServiceStarted() {
 		if (mockUserService != null) {
 			return;
 		}
 
-		mockUserService = HttpServer.create()
-				.host("127.0.0.1")
-				.port(0)
-				.route(routes -> routes
-						.post("/auth/register", (request, response) -> duplicateCorsResponse(request.requestHeaders().get(HttpHeaders.ORIGIN), response))
-						.post("/auth/login", (request, response) -> duplicateCorsResponse(request.requestHeaders().get(HttpHeaders.ORIGIN), response)))
-				.bindNow();
+			mockUserService = HttpServer.create()
+					.host("127.0.0.1")
+					.port(0)
+					.route(routes -> routes
+							.post("/auth/register", (request, response) -> duplicateCorsResponse(request.requestHeaders().get(HttpHeaders.ORIGIN), response))
+							.post("/auth/login", (request, response) -> duplicateCorsResponse(request.requestHeaders().get(HttpHeaders.ORIGIN), response))
+							.get("/api/v1/projects", (request, response) -> response
+									.status(HttpResponseStatus.OK)
+									.header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+									.sendString(Mono.just("{\"route\":\"v1-projects\"}"))
+									.then()))
+					.bindNow();
 	}
 
 	private static Mono<Void> duplicateCorsResponse(String origin, reactor.netty.http.server.HttpServerResponse response) {
